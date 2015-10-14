@@ -10,6 +10,8 @@ import android.view.SurfaceView;
 
 public class MySurface extends SurfaceView {
 	
+
+	private Thread mThread;
 	private SurfaceHolder mHolder;
 	private int x, y;
 
@@ -34,6 +36,7 @@ public class MySurface extends SurfaceView {
 		@Override
 		public void surfaceCreated(SurfaceHolder holder) {
 			Log.d("zhl", "surface created");
+			newThread();
 			mThread.start();
 		}
 		
@@ -46,38 +49,43 @@ public class MySurface extends SurfaceView {
 	};
 	protected boolean shouldRun = true;
 
-	private Thread mThread = new Thread(new Runnable() {
-		
-		@Override
-		public void run() {
+	private void newThread() {
+		x = y = 0;
+		shouldRun = true;
+		if(mThread != null) {
+			Log.d("zhl", "thread state:" + mThread.getState());
+		}
+		mThread = new Thread(new Runnable() {
 			
-			while (shouldRun ) {
-				if (y >= getHeight()) {
-					Log.d("zhl", "over" + getHeight());
-					break;
-				}
-				if (x >= getWidth()) {
-					Log.d("zhl", "x:" + x + ",y:" + y);
-					x = 0;
-					y++;
-				}
+			@Override
+			public void run() {
 				Canvas canvas = mHolder.lockCanvas();
-				Paint paint = new Paint();
-				while (y < getHeight()) {
-					x = 0;
-					while (x < getWidth()) {
-						int clr = x * 20 + (getHeight()-y) * 20 * getWidth();
-						clr |= 0xff000000;
+				while (shouldRun ) {
+					if (y >= 255) {
+						Log.d("zhl", "over");
+						break;
+					}
+					if (x >= 255) {
+						Log.d("zhl", "x:" + x + ",y:" + y);
+						x = 0;
+						y++;
+					}
+					
+					Paint paint = new Paint();
+					while (x < 255) {
+						int clr = (x << 8) + y;
+						clr |= 0xff7f0000;
 						paint.setColor(clr);
 						canvas.drawPoint(x, y, paint);
 						x++;
 					}
-					y++;
+					
+					
 				}
-				Log.d("zhl", "out");
 				mHolder.unlockCanvasAndPost(canvas);
-				x++;
+				
 			}
-		}
-	});
+		});
+	}
+	
 }
