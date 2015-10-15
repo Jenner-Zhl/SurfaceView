@@ -1,5 +1,7 @@
 package com.tsurfaceview;
 
+import java.util.Random;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -35,7 +37,7 @@ public class MySurface extends SurfaceView {
 		
 		@Override
 		public void surfaceCreated(SurfaceHolder holder) {
-			Log.d("zhl", "surface created");
+			Log.d("zhl", "surface created " + (holder == mHolder));
 			newThread();
 			mThread.start();
 		}
@@ -60,13 +62,13 @@ public class MySurface extends SurfaceView {
 			@Override
 			public void run() {
 				Canvas canvas = mHolder.lockCanvas();
+				Log.d("zhl", canvas.toString());
 				while (shouldRun ) {
 					if (y >= 255) {
 						Log.d("zhl", "over");
 						break;
 					}
 					if (x >= 255) {
-						Log.d("zhl", "x:" + x + ",y:" + y);
 						x = 0;
 						y++;
 					}
@@ -82,8 +84,41 @@ public class MySurface extends SurfaceView {
 					
 					
 				}
-				mHolder.unlockCanvasAndPost(canvas);
 				
+				mHolder.unlockCanvasAndPost(canvas);
+				int cx = 0, cy = 0, cx1=0, cy1=0, clr =0;
+				boolean newDraw = true;  // for double buffer
+				Paint paint = new Paint();
+				while(shouldRun) {
+					try {
+						Thread.sleep(300);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						break;
+					}
+					
+					canvas = mHolder.lockCanvas();
+					Random rd = new Random();
+					if (newDraw) {
+						cx = rd.nextInt(getWidth() - 50);
+						cy = rd.nextInt(getHeight() - 100);
+						clr = ((rd.nextInt(125) + 130) << 24) | ((rd.nextInt(225) + 30) << 16)
+								| ((rd.nextInt(225) + 30) << 8) | (rd.nextInt(225) + 30);
+					}
+					paint.setColor(clr);
+					if(canvas == null) {
+						break;
+					}
+					canvas.drawLine(cx1, cy1, cx, cy, paint);
+					if (!newDraw) {
+						cx1 = cx;
+						cy1 = cy;
+					}
+					newDraw = !newDraw;
+					mHolder.unlockCanvasAndPost(canvas);
+					
+				}
 			}
 		});
 	}
